@@ -19,13 +19,11 @@ public class CountryDaoImpl {
 
     public String getHashedPassword(String username){
         String hashSql = " SELECT PASSWORD FROM ACCIDENTS_USERS WHERE NAME = '" + username + "' ";
-        String resultantPassword = jdbcTemplate.queryForObject(hashSql, String.class);
-        return resultantPassword;
+        return jdbcTemplate.queryForObject(hashSql, String.class);
     }
 
     public List<WCountry> getCountryInfo(String countryName) {
         String sql = " SELECT * FROM WCOUNTRY WHERE NAME = '" + countryName + "' ";
-        List<WCountry> countryDetails =  jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(WCountry.class));
-        return countryDetails;
+        return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(WCountry.class));
     }
 }
