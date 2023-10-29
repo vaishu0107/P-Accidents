@@ -25,12 +25,7 @@ public class CountryDaoImpl {
 
     public List<WCountry> getCountryInfo(String countryName) {
         String sql = " SELECT * FROM WCOUNTRY WHERE NAME = '" + countryName + "' ";
-        //String sql = " SELECT * FROM WCOUNTRY ";
         List<WCountry> countryDetails =  jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(WCountry.class));
         return countryDetails;
-        // ArrayList countryList = new ArrayList<>((Collection) new WCountry("India","IND","Delhi","India",500000,100000000));
-        // countryList.stream().filter(country -> country.)
-       // return new WCountry("India", "IND", "Delhi", "India", 500000, 100000000);
-
     }
 }
