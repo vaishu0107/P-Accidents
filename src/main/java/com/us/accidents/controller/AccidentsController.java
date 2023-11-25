@@ -2,6 +2,7 @@ package com.us.accidents.controller;
 
 import com.us.accidents.helper.CountryHelper;
 import com.us.accidents.model.LoginCreds;
+import com.us.accidents.model.ComputedIndices;
 import com.us.accidents.model.WCountry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +15,7 @@ import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.List;
-
-import static java.awt.SystemColor.text;
 
 @RestController
 @RequestMapping("/v1")
@@ -36,8 +34,10 @@ public class AccidentsController {
         byte[] hashBytesArray = digest.digest(userCreds.getPassword().getBytes(StandardCharsets.UTF_8));
         String hashedString = bytesToHex(hashBytesArray);
         String actualPasswordHash = countryHelper.getHashedPassword(userCreds.getUsername());
-
-        if(actualPasswordHash.equals(hashedString)) {
+        if(actualPasswordHash.isEmpty()) {
+            return ResponseEntity.badRequest().body("Invalid Login Credentials");
+        }
+        else if(actualPasswordHash.equals(hashedString)) {
             return ResponseEntity.ok("Welcome!");
         } else {
             return ResponseEntity.badRequest().body("Invalid Login Credentials");
@@ -68,4 +68,59 @@ public class AccidentsController {
     }
 
 
+
+    //query 1
+    @CrossOrigin(origins = "*")
+    @PostMapping(path = "/getAccidentDensities", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ComputedIndices>> getAccidentDensities(@RequestBody String stateName)
+    {
+        List<ComputedIndices> accidentDensityInfo = List.of(new ComputedIndices("1", "1.0"),
+                new ComputedIndices("2", "2.0"),new ComputedIndices("3", "3.0"));
+        //List<ComputedIndices> accidentDensityInfo = countryHelper.getAccidentDensities(stateName);
+        return ResponseEntity.ok(accidentDensityInfo);
+    }
+
+    //query 2
+    @CrossOrigin(origins = "*")
+    @PostMapping(path = "/getTrafficSeverity", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ComputedIndices>> getTrafficSeverity(@RequestBody String year)
+    {
+        List<ComputedIndices> trafficSeverityInfo = List.of(new ComputedIndices("1", "1.0"),
+                new ComputedIndices("2", "2.0"),new ComputedIndices("3", "3.0"));
+        //List<ComputedIndices> trafficSeverityInfo = countryHelper.getTrafficSeverity(year);
+        return ResponseEntity.ok(trafficSeverityInfo);
+    }
+
+    //query 3
+    @CrossOrigin(origins = "*")
+    @GetMapping(path = "/getSafetyIndices", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ComputedIndices>> getSafetyIndices()
+    {
+        List<ComputedIndices> safetyIndicesInfo = List.of(new ComputedIndices("1", "1.0"),
+                new ComputedIndices("2", "2.0"),new ComputedIndices("3", "3.0"));
+        //List<ComputedIndices> safetyIndicesInfo = countryHelper.getSafetyIndices();
+        return ResponseEntity.ok(safetyIndicesInfo);
+    }
+
+    //query 4 // hour and avg road block index
+    @CrossOrigin(origins = "*")
+    @GetMapping(path = "/getRoadBlockIndices", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ComputedIndices>> getRoadBlockIndices()
+    {
+        List<ComputedIndices> roadBlockIndices = List.of(new ComputedIndices("1", "1.0"),
+                new ComputedIndices("2", "2.0"),new ComputedIndices("3", "3.0"));
+        //List<ComputedIndices> roadBlockIndices = countryHelper.getRoadBlockIndices();
+        return ResponseEntity.ok(roadBlockIndices);
+    }
+
+    //query 5
+    @CrossOrigin(origins = "*")
+    @PostMapping(path = "/getAccidentFactorIndices", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ComputedIndices>> getAccidentFactorIndices(@RequestBody String stateName)
+    {
+        List<ComputedIndices> accidentFactorIndices = List.of(new ComputedIndices("1", "1.0"),
+                new ComputedIndices("2", "2.0"),new ComputedIndices("3", "3.0"));
+        //List<ComputedIndices> accidentFactorIndices = countryHelper.getAccidentFactorIndices(stateName);
+        return ResponseEntity.ok(accidentFactorIndices);
+    }
 }
