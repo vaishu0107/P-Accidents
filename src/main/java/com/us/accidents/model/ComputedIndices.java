@@ -8,15 +8,15 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ComputedIndices {
-    private String metric;
-    private String indexValue;
+    private Float metric;
+    private Integer indexValue;
 
     public ComputedIndices(){
         super();
-        metric = "";
-        indexValue = "";
+        metric = null;
+        indexValue = null;
     }
-    public ComputedIndices(String metric, String indexValue) {
+    public ComputedIndices(Float metric, Integer indexValue) {
         this.metric = metric;
         this.indexValue = indexValue;
     }

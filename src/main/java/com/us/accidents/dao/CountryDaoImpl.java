@@ -19,7 +19,7 @@ public class CountryDaoImpl {
     Gson gson = new Gson();
 
     public String getHashedPassword(String username){
-        String hashSql = " SELECT PASSWORD FROM ACCIDENTS_USERS WHERE NAME = '" + username + "' ";
+        String hashSql = " SELECT PASSWORD FROM \"VKALVA\".ACCIDENTS_USERS WHERE NAME = '" + username + "' ";
         try {
             return jdbcTemplate.queryForObject(hashSql, String.class);
         } catch (EmptyResultDataAccessException e) {
@@ -62,16 +62,31 @@ public class CountryDaoImpl {
     }
 
     public List<ComputedIndices> getSafetyIndicesInfo() {
-        String sql = " WITH SafetyIndices AS(SELECT Weather_ID,(Visibility/(Wind_Speed+Precipitation+(Temperature* Temperature -154* Temperature+5929))) as Safety_Index \n" +
-                "FROM WEATHER) \n" +
-                " \n" +
-                "SELECT EXTRACT(month FROM A.Start_Time) AS Month_Name, AVG(SI.Safety_Index) AS Avg_Safety_Index \n" +
-                " FROM Accident A \n" +
-                "JOIN SafetyIndices SI ON A.Weather_ID  = SI.Weather_ID \n" +
-                "GROUP BY EXTRACT(month FROM A.Start_Time) \n" +
-                "ORDER BY Month_Name ASC;  ";
+        String sql = "WITH SafetyIndices AS (\n" +
+                "    SELECT \n" +
+                "        Weather_ID,\n" +
+                "        (Visibility / (Wind_Speed + Precipitation + (Temperature * Temperature - 154 * Temperature + 5929))) AS Safety_Index\n" +
+                "    FROM \n" +
+                "        WEATHER\n" +
+                "    WHERE \n" +
+                "        (Wind_Speed + Precipitation + (Temperature * Temperature - 154 * Temperature + 5929) <> 0)\n" +
+                ")\n" +
+                "\n" +
+                "SELECT \n" +
+                "    EXTRACT(month FROM A.Start_Time) AS indexValue, \n" +
+                "    AVG(SI.Safety_Index) AS metric\n" +
+                "FROM \n" +
+                "    \"VKALVA\".Accident A\n" +
+                "JOIN \n" +
+                "    SafetyIndices SI ON A.Weather_ID = SI.Weather_ID\n" +
+                "GROUP BY \n" +
+                "    EXTRACT(month FROM A.Start_Time)\n" +
+                "ORDER BY \n" +
+                "    indexValue ASC";
+
         return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(ComputedIndices.class));
     }
+
 
     public List<ComputedIndices> getRoadBlockIndices() {
         String sql = " WITH Durations AS (SELECT Weather_ID, (End_Time - Start_Time) AS Duration FROM WEATHER) \n" +

@@ -74,8 +74,8 @@ public class AccidentsController {
     @PostMapping(path = "/getAccidentDensities", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<ComputedIndices>> getAccidentDensities(@RequestBody String stateName)
     {
-        List<ComputedIndices> accidentDensityInfo = List.of(new ComputedIndices("1", "1.0"),
-                new ComputedIndices("2", "2.0"),new ComputedIndices("3", "3.0"));
+        List<ComputedIndices> accidentDensityInfo = List.of(new ComputedIndices(1.0F, 1),
+                new ComputedIndices(3.0F, 2),new ComputedIndices(3.0F, 3));
         //List<ComputedIndices> accidentDensityInfo = countryHelper.getAccidentDensities(stateName);
         return ResponseEntity.ok(accidentDensityInfo);
     }
@@ -85,8 +85,8 @@ public class AccidentsController {
     @PostMapping(path = "/getTrafficSeverity", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<ComputedIndices>> getTrafficSeverity(@RequestBody String year)
     {
-        List<ComputedIndices> trafficSeverityInfo = List.of(new ComputedIndices("1", "1.0"),
-                new ComputedIndices("2", "2.0"),new ComputedIndices("3", "3.0"));
+        List<ComputedIndices> trafficSeverityInfo = List.of(new ComputedIndices(1.0F, 1),
+                new ComputedIndices(3.0F, 2),new ComputedIndices(3.0F, 3));
         //List<ComputedIndices> trafficSeverityInfo = countryHelper.getTrafficSeverity(year);
         return ResponseEntity.ok(trafficSeverityInfo);
     }
@@ -96,9 +96,7 @@ public class AccidentsController {
     @GetMapping(path = "/getSafetyIndices", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<ComputedIndices>> getSafetyIndices()
     {
-        List<ComputedIndices> safetyIndicesInfo = List.of(new ComputedIndices("1", "1.0"),
-                new ComputedIndices("2", "2.0"),new ComputedIndices("3", "3.0"));
-        //List<ComputedIndices> safetyIndicesInfo = countryHelper.getSafetyIndices();
+        List<ComputedIndices> safetyIndicesInfo = countryHelper.getSafetyIndices();
         return ResponseEntity.ok(safetyIndicesInfo);
     }
 
@@ -107,8 +105,8 @@ public class AccidentsController {
     @GetMapping(path = "/getRoadBlockIndices", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<ComputedIndices>> getRoadBlockIndices()
     {
-        List<ComputedIndices> roadBlockIndices = List.of(new ComputedIndices("1", "1.0"),
-                new ComputedIndices("2", "2.0"),new ComputedIndices("3", "3.0"));
+        List<ComputedIndices> roadBlockIndices = List.of(new ComputedIndices(1.0F, 1),
+                new ComputedIndices(3.0F, 2),new ComputedIndices(3.0F, 3));
         //List<ComputedIndices> roadBlockIndices = countryHelper.getRoadBlockIndices();
         return ResponseEntity.ok(roadBlockIndices);
     }
@@ -118,8 +116,8 @@ public class AccidentsController {
     @PostMapping(path = "/getAccidentFactorIndices", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<ComputedIndices>> getAccidentFactorIndices(@RequestBody String stateName)
     {
-        List<ComputedIndices> accidentFactorIndices = List.of(new ComputedIndices("1", "1.0"),
-                new ComputedIndices("2", "2.0"),new ComputedIndices("3", "3.0"));
+        List<ComputedIndices> accidentFactorIndices = List.of(new ComputedIndices(1.0F, 1),
+                new ComputedIndices(3.0F, 2),new ComputedIndices(3.0F, 3));
         //List<ComputedIndices> accidentFactorIndices = countryHelper.getAccidentFactorIndices(stateName);
         return ResponseEntity.ok(accidentFactorIndices);
     }
