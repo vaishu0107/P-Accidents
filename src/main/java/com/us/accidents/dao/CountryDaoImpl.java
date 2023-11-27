@@ -33,39 +33,69 @@ public class CountryDaoImpl {
     }
 
     public List<ComputedIndices> getAccidentDensitiesInfo(String stateName) {
-        String sql = " WITH YEAR_COUNT AS (\n" +
-                "    SELECT COUNT(DISTINCT EXTRACT(year FROM A.Start_Time)) AS NUMBER_OF_YEARS \n" +
-                "    FROM \"VKALVA\".Accident A\n" +
-                ")\n" +
-                "SELECT EXTRACT(month FROM A.Start_Time) AS indexValue, COUNT(*) / (S.State_Area * YEAR_COUNT.NUMBER_OF_YEARS) AS metric\n" +
-                "FROM \"VKALVA\".Accident A\n" +
-                "JOIN AccidentLocation AL ON A.Location_ID = AL.Location_ID\n" +
-                "JOIN CountyArea C ON C.County_ID = AL.County\n" +
-                "JOIN StateArea S ON S.State_Name = C.State_Name\n" +
-                "CROSS JOIN YEAR_COUNT\n" +
-                "WHERE S.State_Name = '" + stateName + "'\n" +
-                "GROUP BY EXTRACT(month FROM A.Start_Time), YEAR_COUNT.NUMBER_OF_YEARS, S.State_Area\n" +
-                "ORDER BY indexValue ASC ";
+        String sql = "SELECT ACC_Month as indexValue,\n" +
+                "       AVG(Sum_Density) as metric\n" +
+                "FROM\n" +
+                "  (SELECT SUM(County_Density) Sum_Density,\n" +
+                "          ACC_Year,\n" +
+                "          ACC_Month\n" +
+                "   FROM\n" +
+                "     (SELECT County_ID,\n" +
+                "             COUNT(Location_ID)/AVG(County_Area) AS County_Density,\n" +
+                "             ACC_Year,\n" +
+                "             ACC_Month\n" +
+                "      FROM\n" +
+                "        (SELECT CL.County_ID,\n" +
+                "                CL.State_Name,\n" +
+                "                CL.County_Area,\n" +
+                "                Acc.Location_ID,\n" +
+                "                EXTRACT(YEAR\n" +
+                "                        FROM Start_Time) AS ACC_Year,\n" +
+                "                EXTRACT(MONTH\n" +
+                "                        FROM Start_Time) AS ACC_Month\n" +
+                "         FROM\n" +
+                "           (SELECT County_ID,\n" +
+                "                   State_Name,\n" +
+                "                   County_Area,\n" +
+                "                   Location_ID\n" +
+                "            FROM CountyArea\n" +
+                "            JOIN AccidentLocation ON AccidentLocation.County = CountyArea.County_ID) CL\n" +
+                "         JOIN \"VKALVA\".Accident Acc ON CL.Location_ID = Acc.Accident_ID\n" +
+                "         AND State_Name = '"+stateName+"')\n" +
+                "      GROUP BY ACC_Month,\n" +
+                "               ACC_Year,\n" +
+                "               County_ID\n" +
+                "      ORDER BY Acc_Month ASC, ACC_Year ASC)\n" +
+                "   GROUP BY County_ID,\n" +
+                "            ACC_Year,\n" +
+                "            ACC_Month\n" +
+                "   ORDER BY Acc_YEAR ASC, ACC_Month ASC)\n" +
+                "GROUP BY ACC_Month\n" +
+                "ORDER BY ACC_Month ASC";
         return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(ComputedIndices.class));
     }
 
 
     public List<ComputedIndices> getTrafficIndices(Integer year) {
-        String sql = " WITH Severity_Duration AS (\n" +
-                "    SELECT Accident_ID, Severity, Start_Time\n" +
-                "    FROM \"VKALVA\".Accident\n" +
-                ")\n" +
-                "SELECT EXTRACT(month FROM SD.Start_Time) AS indexValue, AVG(SD.Severity * EXTRACT(day FROM (A.End_Time - A.Start_Time) )) AS metric\n" +
-                "FROM\n" +
-                "    Severity_Duration SD \n" +
-                "JOIN\n" +
-                "    \"VKALVA\".Accident A ON A.Accident_ID = SD.Accident_ID\n" +
-                "WHERE\n" +
-                "    EXTRACT(year FROM SD.Start_Time) = " + year + "\n" +
-                "GROUP BY\n" +
-                "    EXTRACT(month FROM SD.Start_Time)\n" +
-                "ORDER BY\n" +
-                "    indexValue ASC ";
+        String sql = "WITH Severity_Duration AS\n" +
+                "  (SELECT Accident_ID,\n" +
+                "          Severity,\n" +
+                "          Start_Time\n" +
+                "   FROM \"VKALVA\".Accident)\n" +
+                "SELECT EXTRACT(MONTH\n" +
+                "               FROM SD.Start_Time) AS indexValue,\n" +
+                "       AVG(SD.Severity * (EXTRACT(DAY\n" +
+                "                                  FROM (A.End_Time - A.Start_Time))*3600*24 + EXTRACT(HOUR\n" +
+                "                                                                                      FROM (A.End_Time - A.Start_Time))*3600 + EXTRACT(MINUTE\n" +
+                "                                                                                                                                       FROM (A.End_Time - A.Start_Time))*60 + EXTRACT(SECOND\n" +
+                "                                                                                                                                                                                      FROM (A.End_Time - A.Start_Time)))) AS metric\n" +
+                "FROM Severity_Duration SD\n" +
+                "JOIN \"VKALVA\".Accident A ON A.Accident_ID = SD.Accident_ID\n" +
+                "WHERE EXTRACT(YEAR\n" +
+                "              FROM SD.Start_Time) = " + year + "\n" +
+                "GROUP BY EXTRACT(MONTH\n" +
+                "                 FROM SD.Start_Time)\n" +
+                "ORDER BY indexValue ASC";
         return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(ComputedIndices.class));
     }
 
