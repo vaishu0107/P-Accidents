@@ -122,7 +122,21 @@ public class CountryDaoImpl {
     }
 
     public Integer getTotalTuplesCount() {
-        String hashSql = " SELECT COUNT(*) FROM \"VKALVA\".ACCIDENT ";
+        String hashSql = " WITH per_table_counts AS (\n" +
+                "  SELECT COUNT(*) AS row_count FROM \"VKALVA\".ACCIDENT\n" +
+                "  UNION ALL\n" +
+                "  SELECT COUNT(*) FROM \"VKALVA\".StatePopulation\n" +
+                "  UNION ALL\n" +
+                "  SELECT COUNT(*) FROM AccidentLocation\n" +
+                "  UNION ALL\n" +
+                "  SELECT COUNT(*) FROM CountyArea\n" +
+                "  UNION ALL\n" +
+                "  SELECT COUNT(*) FROM StateArea\n" +
+                "  UNION ALL\n" +
+                "  SELECT COUNT(*) FROM WEATHER\n" +
+                ")\n" +
+                "SELECT SUM(row_count) AS total_rows\n" +
+                "FROM per_table_counts ";
         try {
             return jdbcTemplate.queryForObject(hashSql, Integer.class);
         } catch (EmptyResultDataAccessException e) {
