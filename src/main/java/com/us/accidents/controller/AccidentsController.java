@@ -27,6 +27,14 @@ public class AccidentsController {
     private CountryHelper countryHelper;
 
     @CrossOrigin(origins = "*")
+    @GetMapping(path = "/getTotalNumberOfTuples", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Integer> getTotalNumberOfTuples()
+    {
+        Integer totalTuples = countryHelper.getTotalTuples();
+        return ResponseEntity.ok(totalTuples);
+    }
+
+    @CrossOrigin(origins = "*")
     @PostMapping(path = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> login(@RequestBody LoginCreds userCreds) throws NoSuchAlgorithmException {
 

@@ -120,4 +120,13 @@ public class CountryDaoImpl {
                 "    EXTRACT(year FROM A.Start_Time);  ";
         return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(ComputedIndices.class));
     }
+
+    public Integer getTotalTuplesCount() {
+        String hashSql = " SELECT COUNT(*) FROM \"VKALVA\".ACCIDENT ";
+        try {
+            return jdbcTemplate.queryForObject(hashSql, Integer.class);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
 }

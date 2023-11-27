@@ -51,4 +51,8 @@ public class CountryHelper {
         logger.info("GetAccidentFactorIndices: Starts");
         return countryDaoImpl.getAccidentFactorIndices(stateName);
     }
+
+    public Integer getTotalTuples() {
+        return countryDaoImpl.getTotalTuplesCount();
+    }
 }
