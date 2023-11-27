@@ -37,7 +37,7 @@ public class CountryHelper {
         return countryDaoImpl.getSafetyIndicesInfo();
     }
 
-    public List<ComputedIndices> getTrafficSeverity(String year) {
+    public List<ComputedIndices> getTrafficSeverity(Integer year) {
         logger.info("GetTrafficSeverity: Starts");
         return countryDaoImpl.getTrafficIndices(year);
     }

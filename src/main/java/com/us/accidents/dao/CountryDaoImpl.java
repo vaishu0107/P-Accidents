@@ -33,31 +33,39 @@ public class CountryDaoImpl {
     }
 
     public List<ComputedIndices> getAccidentDensitiesInfo(String stateName) {
-        String sql = " WITH YEAR_COUNT AS (SELECT COUNT(DISTINCT EXTRACT(year FROM A.Start_Time)) AS NUMBER_OF_YEARS \n" +
-                "FROM ACCIDENTS) \n" +
-                " \n" +
-                "SELECT EXTRACT(month FROM A.Start_Time) AS MONTH_NAME, COUNT(*)/(S.State_Area * YEAR_COUNT.NUMBER_OF_YEARS) AS AVG_ACCIDENT_DENSITY FROM  \n" +
-                "Accident A \n" +
-                "JOIN AccidentLocation AL ON A.Location_ID = AL.Location_ID \n" +
-                "JOIN CountyArea C ON C.County_ID = AL.County_ID \n" +
-                "JOIN StateArea S ON S.State_Name = C. State_Name \n" +
-                "CROSS JOIN YEAR_COUNT \n" +
-                "WHERE S.State_Name = ‘" + stateName + "’ \n" +
-                "GROUP BY EXTRACT(month FROM A.Start_Time) \n" +
-                "ORDER BY MONTH_NAME ASC;  ";
+        String sql = " WITH YEAR_COUNT AS (\n" +
+                "    SELECT COUNT(DISTINCT EXTRACT(year FROM A.Start_Time)) AS NUMBER_OF_YEARS \n" +
+                "    FROM \"VKALVA\".Accident A\n" +
+                ")\n" +
+                "SELECT EXTRACT(month FROM A.Start_Time) AS indexValue, COUNT(*) / (S.State_Area * YEAR_COUNT.NUMBER_OF_YEARS) AS metric\n" +
+                "FROM \"VKALVA\".Accident A\n" +
+                "JOIN AccidentLocation AL ON A.Location_ID = AL.Location_ID\n" +
+                "JOIN CountyArea C ON C.County_ID = AL.County\n" +
+                "JOIN StateArea S ON S.State_Name = C.State_Name\n" +
+                "CROSS JOIN YEAR_COUNT\n" +
+                "WHERE S.State_Name = '" + stateName + "'\n" +
+                "GROUP BY EXTRACT(month FROM A.Start_Time), YEAR_COUNT.NUMBER_OF_YEARS, S.State_Area\n" +
+                "ORDER BY indexValue ASC ";
         return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(ComputedIndices.class));
     }
 
 
-    public List<ComputedIndices> getTrafficIndices(String year) {
-        String sql = " WITH Severity_Duration AS (SELECT Accident_ID, (Severity*(End_Time -Start_Time)) AS severitymetric, EXTRACT(year FROM A.Start_Time) AS Year FROM ACCIDENT) \n" +
-                " \n" +
-                "SELECT EXTRACT(month FROM SD.Start_Time) AS MONTH_NAME, AVG(SD.severitymetric) AS Traffic_Severity \n" +
-                "FROM Severity_Duration SD  \n" +
-                "JOIN Accident A ON A.Weather_ID = SD.Weather_ID \n" +
-                "WHERE Year = ‘" + year + "’ \n" +
-                " GROUP BY EXTRACT(month FROM SD.Start_Time) \n" +
-                "ORDER BY MONTH_NAME ASC;  ";
+    public List<ComputedIndices> getTrafficIndices(Integer year) {
+        String sql = " WITH Severity_Duration AS (\n" +
+                "    SELECT Accident_ID, Severity, Start_Time\n" +
+                "    FROM \"VKALVA\".Accident\n" +
+                ")\n" +
+                "SELECT EXTRACT(month FROM SD.Start_Time) AS indexValue, AVG(SD.Severity * EXTRACT(day FROM (A.End_Time - A.Start_Time) )) AS metric\n" +
+                "FROM\n" +
+                "    Severity_Duration SD \n" +
+                "JOIN\n" +
+                "    \"VKALVA\".Accident A ON A.Accident_ID = SD.Accident_ID\n" +
+                "WHERE\n" +
+                "    EXTRACT(year FROM SD.Start_Time) = " + year + "\n" +
+                "GROUP BY\n" +
+                "    EXTRACT(month FROM SD.Start_Time)\n" +
+                "ORDER BY\n" +
+                "    indexValue ASC ";
         return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(ComputedIndices.class));
     }
 
@@ -89,35 +97,56 @@ public class CountryDaoImpl {
 
 
     public List<ComputedIndices> getRoadBlockIndices() {
-        String sql = " WITH Durations AS (SELECT Weather_ID, (End_Time - Start_Time) AS Duration FROM WEATHER) \n" +
-                " \n" +
-                "SELECT EXTRACT(hour FROM A.Start_Time) AS Hour, AVG(D.Durations) AS Avg_Road_Block \n" +
-                "FROM Durations D  \n" +
-                "JOIN Accidents A ON A.Weather_ID = D.Weather_ID \n" +
-                "GROUP BY EXTRACT(hour FROM A.Start_Time) \n" +
-                "ORDER BY Hour ASC; ";
+        String sql = " WITH Duration AS (\n" +
+                "    SELECT\n" +
+                "        A.Location_ID,\n" +
+                "        A.Weather_ID,\n" +
+                "        A.End_Time - A.Start_Time AS Duration,\n" +
+                "        A.Start_Time\n" +
+                "    FROM\n" +
+                "        \"VKALVA\".Accident A\n" +
+                "    WHERE\n" +
+                "        A.Start_Time >= TO_TIMESTAMP('2016-01-01', 'YYYY-MM-DD') AND\n" +
+                "        A.Start_Time < TO_TIMESTAMP('2024-01-01', 'YYYY-MM-DD') \n" +
+                "),\n" +
+                "AllHours AS (\n" +
+                "    SELECT LEVEL - 1 AS HourNumber\n" +
+                "    FROM dual\n" +
+                "    CONNECT BY LEVEL <= 24\n" +
+                ")\n" +
+                "SELECT ah.HourNumber AS indexValue, \n" +
+                "    AVG(\n" +
+                "        COALESCE(\n" +
+                "            EXTRACT(DAY FROM D.Duration) * 24 +\n" +
+                "            EXTRACT(HOUR FROM D.Duration) +\n" +
+                "            EXTRACT(MINUTE FROM D.Duration) / 60 +\n" +
+                "            EXTRACT(SECOND FROM D.Duration) / 3600,\n" +
+                "            0\n" +
+                "        )\n" +
+                "    ) AS metric\n" +
+                "FROM AllHours ah\n" +
+                "CROSS JOIN StateArea sa\n" +
+                "LEFT JOIN Duration D ON EXTRACT(HOUR FROM D.Start_Time) = ah.HourNumber\n" +
+                "LEFT JOIN AccidentLocation al ON D.Location_ID = al.Location_ID\n" +
+                "LEFT JOIN CountyArea ca ON al.County = ca.County_ID\n" +
+                "GROUP BY ah.HourNumber\n" +
+                "ORDER BY ah.HourNumber ";
         return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(ComputedIndices.class));
     }
 
-
     public List<ComputedIndices> getAccidentFactorIndices(String stateName) {
-        String sql = " SELECT  \n" +
-                "    EXTRACT(year FROM A.Start_Time) AS Year, \n" +
-                "    (SUM(A.Severity) * COUNT(*) / (S.State_Area * SP.Population)) AS Accidents_Factor \n" +
-                "FROM  \n" +
-                "    Accident A \n" +
-                "JOIN  \n" +
-                "    AccidentLocation AL ON A.Location_ID = AL.Location_ID \n" +
-                "JOIN  \n" +
-                "    CountyArea C ON C.County_ID = AL.County_ID \n" +
-                "JOIN  \n" +
-                "    StateArea S ON S.State_Name = C.State_Name \n" +
-                "JOIN  \n" +
-                "    StatePopulation SP ON S.State_Name = SP.State_Name AND EXTRACT(year FROM A.Start_Time) = SP.Year \n" +
-                "WHERE  \n" +
-                "    S.State_Name = '" + stateName + "' \n" +
-                "GROUP BY  \n" +
-                "    EXTRACT(year FROM A.Start_Time);  ";
+        String sql = " SELECT (AVG(Severity)*COUNT(Accident_ID))/((SUM(POPULATION)/COUNT(Population))*( SUM(State_Area)/COUNT(State_Area))) * 10000000 AS metric,AC_Year AS indexValue FROM (SELECT Severity,Accident_ID, AC_Year FROM \n" +
+                "(SELECT Severity, Accident_ID, EXTRACT(YEAR FROM Start_Time) AS AC_Year FROM \"VKALVA\".Accident ) \"AC\") \"NUME\" JOIN (SELECT SD.State_Area, SD.Year, SD.Population, SD.State_Name, LocaD.Location_ID\n" +
+                "FROM (\n" +
+                "    SELECT SA.State_Area, SP.Year, SP.Population, SA.State_Name  \n" +
+                "    FROM StateArea SA \n" +
+                "    JOIN \"VKALVA\".StatePopulation SP ON SA.State_Name = SP.State_Name\n" +
+                ") SD\n" +
+                "JOIN (\n" +
+                "    SELECT CA.State_Name, AL.Location_ID \n" +
+                "    FROM AccidentLocation AL\n" +
+                "    JOIN CountyArea CA ON CA.County_id = AL.County\n" +
+                ") LocaD ON SD.State_Name = LocaD.State_Name) \"DENO\" ON DENO.Location_ID = NUME.Accident_ID AND Year = AC_Year AND State_Name = '" + stateName + "'  GROUP BY AC_Year ORDER BY AC_Year ASC ";
         return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(ComputedIndices.class));
     }
 

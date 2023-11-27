@@ -1,9 +1,7 @@
 package com.us.accidents.controller;
 
 import com.us.accidents.helper.CountryHelper;
-import com.us.accidents.model.LoginCreds;
-import com.us.accidents.model.ComputedIndices;
-import com.us.accidents.model.WCountry;
+import com.us.accidents.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +13,7 @@ import com.google.gson.Gson;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -76,26 +75,21 @@ public class AccidentsController {
     }
 
 
-
     //query 1
     @CrossOrigin(origins = "*")
     @PostMapping(path = "/getAccidentDensities", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ComputedIndices>> getAccidentDensities(@RequestBody String stateName)
+    public ResponseEntity<List<ComputedIndices>> getAccidentDensities(@RequestBody StatePojo stateNameRequest)
     {
-        List<ComputedIndices> accidentDensityInfo = List.of(new ComputedIndices(1.0F, 1),
-                new ComputedIndices(3.0F, 2),new ComputedIndices(3.0F, 3));
-        //List<ComputedIndices> accidentDensityInfo = countryHelper.getAccidentDensities(stateName);
+        List<ComputedIndices> accidentDensityInfo = countryHelper.getAccidentDensities(stateNameRequest.getStateName());
         return ResponseEntity.ok(accidentDensityInfo);
     }
 
     //query 2
     @CrossOrigin(origins = "*")
     @PostMapping(path = "/getTrafficSeverity", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ComputedIndices>> getTrafficSeverity(@RequestBody String year)
+    public ResponseEntity<List<ComputedIndices>> getTrafficSeverity(@RequestBody YearPojo yearRequest)
     {
-        List<ComputedIndices> trafficSeverityInfo = List.of(new ComputedIndices(1.0F, 1),
-                new ComputedIndices(3.0F, 2),new ComputedIndices(3.0F, 3));
-        //List<ComputedIndices> trafficSeverityInfo = countryHelper.getTrafficSeverity(year);
+        List<ComputedIndices> trafficSeverityInfo = countryHelper.getTrafficSeverity(yearRequest.getYear());
         return ResponseEntity.ok(trafficSeverityInfo);
     }
 
@@ -108,25 +102,22 @@ public class AccidentsController {
         return ResponseEntity.ok(safetyIndicesInfo);
     }
 
-    //query 4 // hour and avg road block index
+    //query 4
     @CrossOrigin(origins = "*")
     @GetMapping(path = "/getRoadBlockIndices", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<ComputedIndices>> getRoadBlockIndices()
     {
-        List<ComputedIndices> roadBlockIndices = List.of(new ComputedIndices(1.0F, 1),
-                new ComputedIndices(3.0F, 2),new ComputedIndices(3.0F, 3));
-        //List<ComputedIndices> roadBlockIndices = countryHelper.getRoadBlockIndices();
+        List<ComputedIndices> roadBlockIndices = countryHelper.getRoadBlockIndices();
         return ResponseEntity.ok(roadBlockIndices);
     }
 
     //query 5
     @CrossOrigin(origins = "*")
     @PostMapping(path = "/getAccidentFactorIndices", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ComputedIndices>> getAccidentFactorIndices(@RequestBody String stateName)
+    public ResponseEntity<List<ComputedIndices>> getAccidentFactorIndices(@RequestBody StatePojo stateNameRequest)
     {
-        List<ComputedIndices> accidentFactorIndices = List.of(new ComputedIndices(1.0F, 1),
-                new ComputedIndices(3.0F, 2),new ComputedIndices(3.0F, 3));
-        //List<ComputedIndices> accidentFactorIndices = countryHelper.getAccidentFactorIndices(stateName);
+        List<ComputedIndices> accidentFactorIndices = countryHelper.getAccidentFactorIndices(stateNameRequest.getStateName());
+
         return ResponseEntity.ok(accidentFactorIndices);
     }
 }
